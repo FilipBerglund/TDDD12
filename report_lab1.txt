@@ -127,33 +127,149 @@ mysql> SELECT id, name, startyear - birthyear AS 'START AGE'
 
 
 6)Which employees have a last name ending with “son”?
-
+mysql> SELECT *
+    -> FROM jbemployee
+    -> WHERE name
+    -> LIKE '%son,%';
++----+---------------+--------+---------+-----------+-----------+
+| id | name          | salary | manager | birthyear | startyear |
++----+---------------+--------+---------+-----------+-----------+
+| 26 | Thompson, Bob |  13000 |     199 |      1930 |      1970 |
++----+---------------+--------+---------+-----------+-----------+
+1 row in set (0.01 sec)
 
 7)Which items (note items, not parts) have been delivered by a supplier called Fisher-Price? Formulate this query using a subquery in the where-clause.
+mysql> SELECT *
+    -> FROM jbitem
+    -> WHERE supplier =
+    -> (SELECT
+    -> id FROM jbsupplier
+    -> WHERE name = 'Fisher-Price');
++-----+-----------------+------+-------+------+----------+
+| id  | name            | dept | price | qoh  | supplier |
++-----+-----------------+------+-------+------+----------+
+|  43 | Maze            |   49 |   325 |  200 |       89 |
+| 107 | The 'Feel' Book |   35 |   225 |  225 |       89 |
+| 119 | Squeeze Ball    |   49 |   250 |  400 |       89 |
++-----+-----------------+------+-------+------+----------+
+3 rows in set (0.08 sec)
 
 
 8)Formulate the same query as above, but without a subquery.
+mysql> SELECT ITEM.*
+    -> FROM jbitem AS ITEM
+    -> INNER JOIN jbsupplier AS SUPPL
+    -> ON ITEM.supplier = SUPPL.id
+    -> WHERE SUPPL.name = 'Fisher-Price';
++-----+-----------------+------+-------+------+----------+
+| id  | name            | dept | price | qoh  | supplier |
++-----+-----------------+------+-------+------+----------+
+|  43 | Maze            |   49 |   325 |  200 |       89 |
+| 107 | The 'Feel' Book |   35 |   225 |  225 |       89 |
+| 119 | Squeeze Ball    |   49 |   250 |  400 |       89 |
++-----+-----------------+------+-------+------+----------+
+3 rows in set (0.01 sec)
 
 
 9)Show all cities that have suppliers located in them. Formulate this query using a subquery in the where-clause.
+mysql> SELECT *
+    -> FROM jbcity
+    -> WHERE id IN
+    -> (SELECT city
+    -> FROM jbsupplier;
++-----+----------------+-------+
+| id  | name           | state |
++-----+----------------+-------+
+|  10 | Amherst        | Mass  |
+|  21 | Boston         | Mass  |
+| 100 | New York       | NY    |
+| 106 | White Plains   | Neb   |
+| 118 | Hickville      | Okla  |
+| 303 | Atlanta        | Ga    |
+| 537 | Madison        | Wisc  |
+| 609 | Paxton         | Ill   |
+| 752 | Dallas         | Tex   |
+| 802 | Denver         | Colo  |
+| 841 | Salt Lake City | Utah  |
+| 900 | Los Angeles    | Calif |
+| 921 | San Diego      | Calif |
+| 941 | San Francisco  | Calif |
+| 981 | Seattle        | Wash  |
++-----+----------------+-------+
+15 rows in set (0.02 sec)
 
 
-10)What is the name and color of the parts that are heavier than a card reader? Formulate this query using a subquery in the where-clause. (The SQL query must not contain the weightas a constant.)
+10)What is the name and color of the parts that are heavier than a card reader? Formulate this query using a subquery in the where-clause. (The SQL query must not contain the weight as a constant.)
+mysql> SELECT name, color
+    -> FROM jbparts
+    -> WHERE weight >
+    -> (SELECT weight
+    -> FROM jbparts
+    -> WHERE name = 'card reader');
++--------------+--------+
+| name         | color  |
++--------------+--------+
+| disk drive   | black  |
+| tape drive   | black  |
+| line printer | yellow |
+| card punch   | gray   |
++--------------+--------+
+4 rows in set (0.02 sec)
+
 
 
 11)Formulate the same query as above, but without a subquery. (The query must not contain the weight as a constant.)
+mysql> SELECT P1.name, P1.color
+    -> FROM jbparts AS P1 INNER JOIN jbparts AS P2
+    -> ON P1.weight > P2.weight
+    -> WHERE P2.name = 'card reader';
++--------------+--------+
+| name         | color  |
++--------------+--------+
+| disk drive   | black  |
+| tape drive   | black  |
+| line printer | yellow |
+| card punch   | gray   |
++--------------+--------+
+4 rows in set (0.03 sec)
 
 
 12)What is the average weight of black parts?
+mysql> SELECT AVG(weight)
+    -> AS 'AVERAGE WEIGHT OF BLACK PARTS'
+    -> FROM jbparts
+    -> WHERE color = 'black';
++-------------------------------+
+| AVERAGE WEIGHT OF BLACK PARTS |
++-------------------------------+
+|                      347.2500 |
++-------------------------------+
+1 row in set (0.02 sec)
 
 
-13)What is the total weight of all parts thateach supplier in Massachusetts (“Mass”) has delivered? Retrieve the name and the total weight for each of these suppliers. Do not forget to take the quantity of delivered parts into account.Note that one row should be returned for each supplier.
+13)What is the total weight of all parts that each supplier in Massachusetts (“Mass”) has delivered? Retrieve the name and the total weight for each of these suppliers. Do not forget to take the quantity of delivered parts into account. Note that one row should be returned for each supplier.
+mysql> SELECT SUPPL.name, SUM(SUPPLY.quan * PARTS.weight) AS 'TOTAL WEIGHT OF DELIVERIES'
+FROM jbsupplier AS SUPPL
+JOIN jbsupply AS SUPPLY
+JOIN jbparts AS PARTS
+JOIN jbcity AS CITY
+ON SUPPL.id = SUPPLY.supplier
+AND CITY.id = SUPPL.city
+AND CITY.state = 'Mass'
+GROUP BY SUPPL.name;
++--------------+----------------------------+
+| name         | TOTAL WEIGHT OF DELIVERIES |
++--------------+----------------------------+
+| DEC          |                     192372 |
+| Fisher-Price |                    5576000 |
++--------------+----------------------------+
+2 rows in set (0.02 sec)
 
 
-14)Create anew relation (a table),with the same attributes as the table itemsusing the CREATE TABLE syntax where you define every attribute explicitly (i.e. not as a copy of another table). Then fill the table with all items that cost less than the average price for items.Remember to define primary and foreign keys in your table!
+14)Create a new relation (a table), with the same attributes as the table items using the CREATE TABLE syntax where you define every attribute explicitly (i.e. not as a copy of another table). Then fill the table with all items that cost less than the average price for items.Remember to define primary and foreign keys in your table!
 
 
-15)Create a view that contains the items that cost less than the average price for items. 
+15)Create a view that contains the items that cost less than the average price for items.
 
 
 16)What is the difference between a table and a view?One is static and the other is dynamic. Which is which and what do we mean by static respectively dynamic?
