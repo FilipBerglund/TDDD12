@@ -1,12 +1,21 @@
 GUIDE TO SETTING UP WORK ENVIRONMENT
 
-1. Get mysql somehow.
-2. Get a password and username here
+1. Get a password and username here
 https://www.ida.liu.se/local/students/mysql/passwd.en.shtml
-3. Open a terminal and write
-ssh -L 3306:mariadb.edu.liu.se:3306 xxxyyy123@ssh.edu.liu.se
-4. Open another terminal and write
-mysql -h 127.0.0.1 -u <your login name> -p <your login name>
-5. In the same terminal, load the database to mysql by writing
-source company_schema.sql;
-source company_data.sql;
+
+if using_linux
+    2. Get mysql somehow.
+    3. Open a terminal and write
+    ssh -L 3306:mariadb.edu.liu.se:3306 xxxyyy123@ssh.edu.liu.se
+    4. Open another terminal and write
+    mysql -h 127.0.0.1 -u <your login name> -p <your login name>
+    5. In the same terminal, load the database to mysql by writing
+    source company_schema.sql;
+    source company_data.sql;
+elif using_ssh
+    2. Connect to thinlinc via ssh. In the terminal write
+    ssh filbe882@thinlinc.edu.liu.se
+    3. Start mysql by typing (now using the password generated in step 1)
+    mysql -h mariadb.edu.liu.se -u filbe882 -p filbe882
+else
+    2. Reconsider and do one of the above.
